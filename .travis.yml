@@ -1,0 +1,13 @@
+language: python
+python:
+  - "3.8"
+env:
+  - SECRET_KEY="DEBUG"
+
+services:
+  - mysql
+
+install:
+  - python -m pip install -r employee_management/requirements.txt
+script:
+  - python employee_management/manage.py test
