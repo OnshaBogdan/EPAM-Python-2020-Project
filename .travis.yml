@@ -1,0 +1,16 @@
+language: python
+python:
+  - "3.8"
+env:
+  - SECRET_KEY="DEBUG"
+
+services:
+  - mysql
+
+before_script:
+  - sudo mysql -e 'CREATE DATABASE employee_management;'
+
+install:
+  - python -m pip install -r employee_management/requirements.txt
+script:
+  - python employee_management/manage.py test
