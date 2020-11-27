@@ -12,6 +12,7 @@ before_script:
 
 install:
   - python -m pip install -r employee_management/requirements.txt
+  - python -m pip install coveralls
 script:
   - cd employee_management/
   - coverage run manage.py test && coverage report
