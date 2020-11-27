@@ -13,4 +13,9 @@ before_script:
 install:
   - python -m pip install -r employee_management/requirements.txt
 script:
-  - python employee_management/manage.py test
+  - cd employee_management/
+  - coverage run manage.py test && coverage report
+
+after_success:
+  - coveralls
+
