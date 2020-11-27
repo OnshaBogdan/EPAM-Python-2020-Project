@@ -1,0 +1,10 @@
+[coverage:run]
+source = department_app
+branch = True
+omit = *tests*, *migrations*, *__init__*, *apps.py
+
+[coverage:report]
+fail_under = 80
+show_missing = True
+skip_covered = False
+
