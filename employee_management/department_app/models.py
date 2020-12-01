@@ -2,6 +2,9 @@ from django.db import models
 
 
 class Department(models.Model):
+    """
+    Stores a single Department entity, related to :model:`department_app.Employee`
+    """
     name = models.CharField(max_length=30, null=False, default=None, unique=True)
 
     def __str__(self):
@@ -9,6 +12,9 @@ class Department(models.Model):
 
 
 class Employee(models.Model):
+    """
+    Stores a single Employee entity, related to :model:`department_app.Employee`
+    """
     name = models.CharField(max_length=30, null=False)
     related_department = models.ForeignKey(
         Department,
