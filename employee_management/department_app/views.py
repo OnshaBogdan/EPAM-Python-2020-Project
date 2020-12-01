@@ -1,10 +1,10 @@
-from rest_framework import status
+from rest_framework import status, generics
 from rest_framework.exceptions import NotFound
 from rest_framework.response import Response
-from rest_framework.views import APIView
 from rest_framework.viewsets import ModelViewSet
 
 from .serializers import *
+from .filters import DepartmentFilter, EmployeeFilter
 
 
 class DepartmentViewSet(ModelViewSet):
@@ -21,6 +21,8 @@ class DepartmentViewSet(ModelViewSet):
     serializer_class = DepartmentSerializer
     queryset = Department.objects.all()
 
+    filterset_class = DepartmentFilter
+
 
 class EmployeeViewSet(ModelViewSet):
     """
@@ -35,26 +37,33 @@ class EmployeeViewSet(ModelViewSet):
     """
     serializer_class = EmployeeSerializer
     queryset = Employee.objects.all()
+    filterset_class = EmployeeFilter
 
 
-class DepartmentEmployeesList(APIView):
+class DepartmentEmployeesList(generics.ListCreateAPIView):
     """
-    Department's employees APIView.
+    ListCreateAPIVIew for Department's Employees.
+
+    list: List all employees of the given department
+    create: Create new employee with the given department as related_repartment
     """
+    serializer_class = EmployeeSerializerNested
+    filterset_class = EmployeeFilter
 
-    def get(self, request, pk):
+    def get_queryset(self):
         """
-        Get list of department's employees with the given department pk.
+        Returns Employees list with of the given department.
         """
-        queryset = Employee.objects.filter(related_department__pk=pk)
-        serializer = EmployeeSerializerNested(queryset, many=True)
-        return Response(serializer.data)
+        queryset = Employee.objects.all()
+        department_pk = self.kwargs['pk']
 
-    def post(self, request, pk):
+        return queryset.filter(related_department__pk=department_pk)
+
+    def create(self, request, *args, **kwargs):
         """
         Create new Employee instance with the given related_department pk.
         """
-        request.data['related_department_pk'] = pk
+        request.data['related_department_pk'] = self.kwargs['pk']
         serializer = EmployeeSerializer(data=request.data)
         if serializer.is_valid():
             serializer.save()
@@ -62,12 +71,18 @@ class DepartmentEmployeesList(APIView):
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
-class DepartmentEmployeeDetail(APIView):
+class DepartmentEmployeeDetail(generics.RetrieveUpdateDestroyAPIView):
     """
-    Department's Employee APIView.
-    """
+    RetrieveUpdateDestroyAPIView for Department's Employee.
 
-    def get_object(self, department_pk, pk):
+    retrieve: Retrieve employee with the given department_pk and pk
+    update: Update employee data
+    partial_update: Patch employee data
+    destroy: Delete employee
+    """
+    serializer_class = EmployeeSerializerNested
+
+    def get_object(self):
         """
         Returns employee instance with the given pk and related_repartment pk.
 
@@ -75,35 +90,19 @@ class DepartmentEmployeeDetail(APIView):
         """
         try:
             return Employee.objects.get(
-                related_department__pk=department_pk,
-                pk=pk
+                related_department__pk=self.kwargs['department_pk'],
+                pk=self.kwargs['pk']
             )
         except Employee.DoesNotExist:
             raise NotFound(detail='Employee with the given id does not exist.')
 
-    def get(self, request, department_pk, pk):
-        """
-        Retrieves a single Employee instance with the given pk and related_department pk.
-        """
-        employee = self.get_object(department_pk, pk)
-        serializer = EmployeeSerializerNested(employee, many=False)
-        return Response(serializer.data)
-
-    def put(self, request, department_pk, pk):
+    def put(self, request, *args, **kwargs):
         """
         Updates Employee instance with the given pk and related_department pk.
         """
-        employee = self.get_object(department_pk, pk)
+        employee = self.get_object()
         serializer = EmployeeSerializer(employee, data=request.data)
         if serializer.is_valid():
             serializer.save()
             return Response(serializer.data)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
-    def delete(self, request, department_pk, pk):
-        """
-        Destroys Employee instance with the given pk and related_department pk.
-        """
-        employee = self.get_object(department_pk, pk)
-        employee.delete()
-        return Response(status=status.HTTP_204_NO_CONTENT)
