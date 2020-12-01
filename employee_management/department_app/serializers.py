@@ -6,27 +6,41 @@ from .models import Employee
 
 
 class EmployeeSerializerNested(serializers.ModelSerializer):
+    """
+    Employee model serializer for usage as nested object.
+    """
+
     class Meta:
         model = Employee
         fields = ['id', 'name', 'date_of_birth', 'salary']
 
 
-class DepartmentSerializer(serializers.ModelSerializer):
-    employees = EmployeeSerializerNested(many=True, read_only=True)
-
-    class Meta:
-        model = Department
-        fields = ['id', 'name', 'employees']
-        extra_kwargs = {'name': {'required': True}, 'id': {'read_only': True}}
-
-
 class DepartmentSerializerNested(serializers.ModelSerializer):
+    """
+    Department model serializer for usage as nested object.
+    """
+
     class Meta:
         model = Department
         fields = ['id', 'name']
 
 
+class DepartmentSerializer(DepartmentSerializerNested):
+    """
+    Department model serializer with nested employees data.
+    """
+    employees = EmployeeSerializerNested(many=True, read_only=True)
+
+    class Meta:
+        model = Department
+        fields = DepartmentSerializerNested.Meta.fields + ['employees']
+        extra_kwargs = {'name': {'required': True}, 'id': {'read_only': True}}
+
+
 class EmployeeSerializer(EmployeeSerializerNested):
+    """
+    Employee model serializer with nested related department data.
+    """
     related_department = DepartmentSerializerNested(many=False, read_only=True)
     related_department_pk = serializers.IntegerField(write_only=True)
 
@@ -36,6 +50,11 @@ class EmployeeSerializer(EmployeeSerializerNested):
             'related_department', 'related_department_pk']
 
     def get_related_department(self, department_pk):
+        """
+        Returns department with the given pk.
+
+        :raises ValidationError
+        """
         try:
             return Department.objects.get(pk=department_pk)
         except Department.DoesNotExist:
@@ -47,6 +66,9 @@ class EmployeeSerializer(EmployeeSerializerNested):
             )
 
     def create(self, validated_data):
+        """
+        Creates Employee instance with the given validated data.
+        """
         department_pk = validated_data.pop('related_department_pk')
         department = self.get_related_department(department_pk)
 
@@ -58,6 +80,9 @@ class EmployeeSerializer(EmployeeSerializerNested):
         return employee
 
     def update(self, instance, validated_data):
+        """
+        Updates employee instance with the given validated data.
+        """
         department_pk = validated_data.pop('related_department_pk')
         department = self.get_related_department(department_pk)
 
