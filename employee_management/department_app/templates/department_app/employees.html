@@ -5,7 +5,16 @@
 
 {% block content %}
 <h1>Employees:</h1>
-<input type="text" id="input-filter" placeholder="Search">
+
+
+<div class="row">
+    <div class="col"></div>
+    <div class="col"><input class="form-control centered" type="text" id="filter-name" placeholder="Name">
+</div>
+    <div class="col"></div>
+</div>
+
+
 <table id="employees-table" class="table table-hover table-bordered">
     <thead class="thead-light">
     <tr>
@@ -25,12 +34,16 @@
 
 {% block scripts %}
 <script>
+    let nameQuery;
+
     const tableBody = document.querySelector('#employees-table > tbody');
 
-    const filter = document.getElementById('input-filter')
-    filter.addEventListener('input', filterChange);
+    const filterName = document.getElementById('filter-name')
+    filterName.addEventListener('input', filterNameChange);
+
 
     async function load_employees(query = "") {
+        query = get_query()
         await fetch('/api/employees' + query)
             .then(response => response.json())
             .then(data => {
@@ -38,10 +51,16 @@
             });
 
     }
-
-    function filterChange(query) {
-        const q = `?name__contains=${query.target.value}`
-        load_employees(q)
+    function get_query(){
+        let query = "?"
+        if (nameQuery){
+            query += `name__contains=${nameQuery}&`
+        }
+        return query
+    }
+    function filterNameChange(query) {
+        nameQuery = query.target.value
+        load_employees()
     }
 
     function insert(employees) {
