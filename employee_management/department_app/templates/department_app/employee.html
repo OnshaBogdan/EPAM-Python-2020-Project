@@ -27,11 +27,69 @@
     </tr>
 </table>
 
+<div class="row">
+    <div class="col">
+        <button type="button" class="btn btn-info" data-toggle="modal" data-target="#editModal">Edit
+            employee
+        </button>
+    </div>
+    <div class="col">
+        <button type="button" class="btn btn-danger" onclick="delete_employee()">Delete
+            employee
+        </button>
+    </div>
+</div>
 
+
+<div class="modal fade" id="editModal" tabindex="-1" role="dialog"
+     aria-labelledby="exampleModalLabel" aria-hidden="true">
+    <form>
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="exampleModalLabel">Edit employee</h5>
+
+                </div>
+                <div class="modal-body">
+
+                    <div class="form-group">
+                        <label for="employeeNameInput">Name</label>
+                        <input type="text" class="form-control" id="employeeNameInput">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="employeeDateOfBirthInput">Date of birth</label>
+                        <input type="text" class="form-control" id="employeeDateOfBirthInput">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="employeeSalaryInput">Salary</label>
+                        <input type="text" class="form-control" id="employeeSalaryInput">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="inputDepartment">Related Department</label>
+                        <select class="custom-select" id="inputDepartment">
+                        </select>
+
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Close
+                    </button>
+                    <button type="button" class="btn btn-primary" onclick="edit_employee()">Save changes</button>
+                </div>
+            </div>
+        </div>
+    </form>
+</div>
 {% endblock %}
 
 {% block scripts %}
 <script>
+    let current_employee;
+    let departments;
+
     async function load_employee() {
         const pk = {{ pk }};
 
@@ -42,9 +100,75 @@
             });
     }
 
-    function insert(employee) {
-        document.getElementById('title').innerText = `${employee.name} Info:`;
+    async function edit_employee(){
+        const pk = {{ pk }};
+        let data = {
+            name: document.getElementById("employeeNameInput").value,
+            date_of_birth: document.getElementById("employeeDateOfBirthInput").value,
+            salary: document.getElementById("employeeSalaryInput").value,
+            related_department_pk: document.getElementById("inputDepartment").value
+        }
+        console.log('data',data)
+        await fetch(`/api/employees/${pk}/`,
+            {
+                method: 'PUT',
+                credentials: "same-origin",
+                headers: {
+                    "X-CSRFToken": getCookie("csrftoken"),
+                    "Accept": "application/json",
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(data)
+            }).then(() => window.location.reload())
+    }
+    async function delete_employee() {
+        const pk = {{ pk }};
+        await fetch(`/api/employees/${pk}/`,
+            {
+                method: 'DELETE',
+                credentials: "same-origin",
+                headers: {
+                    "X-CSRFToken": getCookie("csrftoken"),
+                    "Accept": "application/json",
+                    'Content-Type': 'application/json'
+                },
+            })
+            .then(() => window.location.href = '/')
 
+    }
+    function getCookie(name) {
+        var cookieValue = null;
+        if (document.cookie && document.cookie !== '') {
+            var cookies = document.cookie.split(';');
+            for (var i = 0; i < cookies.length; i++) {
+                var cookie = jQuery.trim(cookies[i]);
+                if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                    break;
+                }
+            }
+        }
+        return cookieValue;
+    }
+    async function load_departments(){
+         await fetch(`/api/departments/`)
+            .then(response => response.json())
+            .then(data => {
+                departments = data
+                let select = document.getElementById('inputDepartment')
+                departments.forEach((department) => {
+                    let option = document.createElement("option");
+                    option.setAttribute('value', department.id)
+                    option.textContent = department.name;
+                    select.appendChild(option)
+                })
+
+            });
+    }
+    function insert(employee) {
+        current_employee = employee;
+        document.getElementById('title').innerText = `${employee.name} Info:`;
+        document.getElementById('employeeNameInput').value = employee.name;
         document.getElementById('name').innerText = employee.name;
 
         const departmentLink = document.createElement('a')
@@ -52,12 +176,16 @@
         departmentLink.innerText = employee.related_department.name;
         document.getElementById('related_department').appendChild(departmentLink)
         document.getElementById('salary').innerText = `$${employee.salary}`;
+        document.getElementById('employeeSalaryInput').value = employee.salary;
+
         document.getElementById('date_of_birth').innerText = employee.date_of_birth;
+        document.getElementById('employeeDateOfBirthInput').value = employee.date_of_birth;
 
     }
 
     document.addEventListener("DOMContentLoaded", () => {
         load_employee();
     })
+    load_departments();
 </script>
 {% endblock %}

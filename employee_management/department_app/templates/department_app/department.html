@@ -36,6 +36,47 @@
     </tbody>
 </table>
 
+<div class="row">
+    <div class="col">
+        <button type="button" class="btn btn-info" data-toggle="modal" data-target="#editModal">Edit
+            department
+        </button>
+    </div>
+    <div class="col">
+        <button type="button" class="btn btn-danger" onclick="delete_department()">Delete
+            department
+        </button>
+    </div>
+</div>
+
+
+<div class="modal fade" id="editModal" tabindex="-1" role="dialog"
+     aria-labelledby="exampleModalLabel" aria-hidden="true">
+    <form>
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="exampleModalLabel">Edit department</h5>
+
+                </div>
+                <div class="modal-body">
+
+                    <div class="form-group">
+                        <label for="departmentNameInput">Department Name</label>
+                        <input type="text" class="form-control" id="departmentNameInput"
+                               placeholder="Finance">
+                    </div>
+
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Close
+                    </button>
+                    <button type="button" class="btn btn-primary" onclick="edit_department()">Save changes</button>
+                </div>
+            </div>
+        </div>
+    </form>
+</div>
 
 {% endblock %}
 
@@ -57,6 +98,36 @@
     const filterDateTo = document.getElementById('filter-date-to')
     filterDateTo.addEventListener('input', filterInput);
 
+    async function edit_department(){
+        const value = document.getElementById('departmentNameInput').value;
+
+        await fetch(`/api/departments/${pk}/`,
+            {
+                method: 'PUT',
+                credentials: "same-origin",
+                headers: {
+                    "X-CSRFToken": getCookie("csrftoken"),
+                    "Accept": "application/json",
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({name: value})
+            }).then(() => window.location.reload())
+    }
+
+    async function delete_department() {
+        await fetch(`/api/departments/${pk}/`,
+            {
+                method: 'DELETE',
+                credentials: "same-origin",
+                headers: {
+                    "X-CSRFToken": getCookie("csrftoken"),
+                    "Accept": "application/json",
+                    'Content-Type': 'application/json'
+                },
+            })
+            .then(() => window.location.href = '/')
+
+    }
 
     async function load_data() {
         await fetch(`/api/departments/${pk}/`)
@@ -65,6 +136,21 @@
                 insertDepartment(data)
                 insertEmployees(data.employees)
             });
+    }
+
+    function getCookie(name) {
+        var cookieValue = null;
+        if (document.cookie && document.cookie !== '') {
+            var cookies = document.cookie.split(';');
+            for (var i = 0; i < cookies.length; i++) {
+                var cookie = jQuery.trim(cookies[i]);
+                if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                    break;
+                }
+            }
+        }
+        return cookieValue;
     }
 
     async function load_employees() {
