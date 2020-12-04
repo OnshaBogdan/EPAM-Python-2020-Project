@@ -1,0 +1,87 @@
+{% extends "department_app/base.html" %}
+
+
+{% block title %}Department info{% endblock %}
+
+
+{% block content %}
+<h1 id="title"></h1>
+<p class="salary-label">Average Salary - <strong></strong></p>
+<table id="employees-table">
+    <thead>
+    <tr>
+        <th>
+            Employee name
+        </th>
+        <th>Date of birth</th>
+        <th>Salary</th>
+    </tr>
+    </thead>
+    <tbody>
+
+    </tbody>
+</table>
+
+
+{% endblock %}
+
+{% block scripts %}
+<script>
+    const tableBody = document.querySelector('#employees-table > tbody');
+    const pk = {
+    {
+        pk
+    }
+    }
+    ;
+
+
+    async function load_data() {
+        await fetch(`/api/departments/${pk}/`)
+            .then(response => response.json())
+            .then(data => {
+                insertDepartment(data)
+                insertEmployees(data.employees)
+            });
+
+    }
+
+    function insertEmployees(employees) {
+        while (tableBody.firstChild) {
+            tableBody.removeChild(tableBody.firstChild)
+        }
+        employees.forEach((employee) => {
+            const tr = document.createElement("tr")
+
+            const tdName = document.createElement("td")
+
+            const employeeLink = document.createElement('a')
+            employeeLink.setAttribute('href', `/employees/${employee.id}`)
+            employeeLink.textContent = employee.name;
+            tdName.appendChild(employeeLink)
+            tr.appendChild(tdName)
+
+            const tdDateOfBirth = document.createElement("td")
+            tdDateOfBirth.textContent = employee.date_of_birth;
+            tr.appendChild(tdDateOfBirth)
+            //
+            const tdSalary = document.createElement("td")
+            tdSalary.textContent = `$${employee.salary}`;
+            tr.appendChild(tdSalary)
+
+
+            tableBody.appendChild(tr);
+        });
+    }
+
+    function insertDepartment(department) {
+        document.getElementById('title').innerText = `${department.name} Department:`;
+        document.querySelector('.salary-label > strong').textContent = `$${department.average_salary}`;
+    }
+
+
+    document.addEventListener("DOMContentLoaded", () => {
+        load_data();
+    })
+</script>
+{% endblock %}
