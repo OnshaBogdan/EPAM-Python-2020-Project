@@ -7,15 +7,15 @@
 {% block content %}
 <h1>Departments:</h1>
 
-<table id="departments-table">
-    <thead>
-    <tr>
-        <th>
-            Department name
-        </th>
-        <th>Employees</th>
-        <th>Average Salary</th>
-    </tr>
+<table id="departments-table" class="table table-hover table-bordered">
+    <thead class="thead-light">
+        <tr>
+            <th scope="col">
+                Department name
+            </th>
+            <th scope="col">Employees</th>
+            <th scope="col">Average Salary</th>
+        </tr>
     </thead>
     <tbody>
     <tr>
@@ -36,6 +36,43 @@
 
 </table>
 
+<div class="row">
+    <div class="col">
+        <button type="button" class="btn btn-info" data-toggle="modal" data-target="#createModal">Add
+            department
+        </button>
+    </div>
+</div>
+
+
+<div class="modal fade" id="createModal" tabindex="-1" role="dialog"
+     aria-labelledby="exampleModalLabel" aria-hidden="true">
+    <form>
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="exampleModalLabel">Add department</h5>
+
+                </div>
+                <div class="modal-body">
+
+                    <div class="form-group">
+                        <label for="departmentNameInput">Department Name</label>
+                        <input type="text" class="form-control" id="departmentNameInput"
+                               placeholder="Finance">
+                    </div>
+
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Close
+                    </button>
+                    <button type="button" class="btn btn-primary" onclick="create_department()">Save changes</button>
+                </div>
+            </div>
+        </div>
+    </form>
+</div>
+
 {% endblock %}
 
 {% block scripts %}
@@ -51,7 +88,22 @@
             });
 
     }
-
+    async function create_department(){
+        const data = {
+            name: document.getElementById('departmentNameInput').value
+        }
+        await fetch(`/api/departments/`,
+            {
+                method: 'POST',
+                credentials: "same-origin",
+                headers: {
+                    "X-CSRFToken": getCookie("csrftoken"),
+                    "Accept": "application/json",
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(data)
+            }).then(() => window.location.reload())
+    }
     function insert(departments) {
         while (tableBody.firstChild) {
             tableBody.removeChild(tableBody.firstChild)

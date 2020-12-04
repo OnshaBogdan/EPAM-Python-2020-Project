@@ -7,14 +7,28 @@
 {% block content %}
 <h1 id="title"></h1>
 <p class="salary-label">Average Salary - <strong></strong></p>
-<table id="employees-table">
-    <thead>
+
+<div class="row">
+    <div class="col">
+        <input class="form-control" type="text" id="filter-name" placeholder="Name">
+    </div>
+    <div class="col">
+        <input class="form-control" type="text" id="filter-date-from" placeholder="Date From">
+    </div>
+    <div class="col">
+        <input class="form-control" type="text" id="filter-date-to" placeholder="Date To">
+    </div>
+</div>
+
+
+<table id="employees-table" class="table table-hover table-bordered">
+    <thead class="thead-light">
     <tr>
-        <th>
+        <th scope="col">
             Employee name
         </th>
-        <th>Date of birth</th>
-        <th>Salary</th>
+        <th scope="col">Date of birth</th>
+        <th scope="col">Salary</th>
     </tr>
     </thead>
     <tbody>
@@ -22,19 +36,98 @@
     </tbody>
 </table>
 
+<div class="row">
+    <div class="col">
+        <button type="button" class="btn btn-info" data-toggle="modal" data-target="#editModal">Edit
+            department
+        </button>
+    </div>
+    <div class="col">
+        <button type="button" class="btn btn-danger" onclick="delete_department()">Delete
+            department
+        </button>
+    </div>
+</div>
+
+
+<div class="modal fade" id="editModal" tabindex="-1" role="dialog"
+     aria-labelledby="exampleModalLabel" aria-hidden="true">
+    <form>
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="exampleModalLabel">Edit department</h5>
+
+                </div>
+                <div class="modal-body">
+
+                    <div class="form-group">
+                        <label for="departmentNameInput">Department Name</label>
+                        <input type="text" class="form-control" id="departmentNameInput"
+                               placeholder="Finance">
+                    </div>
+
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Close
+                    </button>
+                    <button type="button" class="btn btn-primary" onclick="edit_department()">Save changes</button>
+                </div>
+            </div>
+        </div>
+    </form>
+</div>
 
 {% endblock %}
 
 {% block scripts %}
 <script>
-    const tableBody = document.querySelector('#employees-table > tbody');
-    const pk = {
-    {
-        pk
-    }
-    }
-    ;
+    let nameQuery;
+    let dateFromQuery;
+    let dateToQuery;
 
+    const tableBody = document.querySelector('#employees-table > tbody');
+    const pk = {{ pk }}
+
+    const filterName = document.getElementById('filter-name')
+    filterName.addEventListener('input', filterInput);
+
+    const filterDateFrom = document.getElementById('filter-date-from')
+    filterDateFrom.addEventListener('input', filterInput);
+
+    const filterDateTo = document.getElementById('filter-date-to')
+    filterDateTo.addEventListener('input', filterInput);
+
+    async function edit_department(){
+        const value = document.getElementById('departmentNameInput').value;
+
+        await fetch(`/api/departments/${pk}/`,
+            {
+                method: 'PUT',
+                credentials: "same-origin",
+                headers: {
+                    "X-CSRFToken": getCookie("csrftoken"),
+                    "Accept": "application/json",
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({name: value})
+            }).then(() => window.location.reload())
+    }
+
+    async function delete_department() {
+        await fetch(`/api/departments/${pk}/`,
+            {
+                method: 'DELETE',
+                credentials: "same-origin",
+                headers: {
+                    "X-CSRFToken": getCookie("csrftoken"),
+                    "Accept": "application/json",
+                    'Content-Type': 'application/json'
+                },
+            })
+            .then(() => window.location.href = '/')
+
+    }
 
     async function load_data() {
         await fetch(`/api/departments/${pk}/`)
@@ -43,7 +136,30 @@
                 insertDepartment(data)
                 insertEmployees(data.employees)
             });
+    }
 
+    function getCookie(name) {
+        var cookieValue = null;
+        if (document.cookie && document.cookie !== '') {
+            var cookies = document.cookie.split(';');
+            for (var i = 0; i < cookies.length; i++) {
+                var cookie = jQuery.trim(cookies[i]);
+                if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                    break;
+                }
+            }
+        }
+        return cookieValue;
+    }
+
+    async function load_employees() {
+        query = get_query()
+        await fetch(`/api/departments/${pk}/employees/${query}`)
+            .then(response => response.json())
+            .then(data => {
+                insertEmployees(data)
+            });
     }
 
     function insertEmployees(employees) {
@@ -64,7 +180,7 @@
             const tdDateOfBirth = document.createElement("td")
             tdDateOfBirth.textContent = employee.date_of_birth;
             tr.appendChild(tdDateOfBirth)
-            //
+
             const tdSalary = document.createElement("td")
             tdSalary.textContent = `$${employee.salary}`;
             tr.appendChild(tdSalary)
@@ -72,6 +188,41 @@
 
             tableBody.appendChild(tr);
         });
+    }
+
+    function get_query() {
+        let query = "?"
+        if (nameQuery) {
+            query += `name__contains=${nameQuery}&`
+        }
+        if (dateFromQuery) {
+            query += `date_after=${dateFromQuery}&`
+        }
+        if (dateToQuery) {
+            query += `date_before=${dateToQuery}&`
+        }
+        return query
+    }
+
+    function filterInput(query) {
+        let re = RegExp("[0-9]{4}-[0-9]{2}-[0-9]{2}")
+        switch (query.target.id) {
+            case 'filter-name':
+                nameQuery = query.target.value
+                break;
+            case 'filter-date-from':
+                if (re.test(query.target.value) || query.target.value === "") {
+                    dateFromQuery = query.target.value
+                }
+                break;
+            case 'filter-date-to':
+                if (re.test(query.target.value) || query.target.value === "") {
+                    dateToQuery = query.target.value
+                }
+                break
+        }
+        load_employees()
+
     }
 
     function insertDepartment(department) {

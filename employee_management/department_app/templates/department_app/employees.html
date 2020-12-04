@@ -5,9 +5,18 @@
 
 {% block content %}
 <h1>Employees:</h1>
-<input type="text" id="input-filter" placeholder="Search">
-<table id="employees-table">
-    <thead>
+
+
+<div class="row">
+    <div class="col"></div>
+    <div class="col"><input class="form-control centered" type="text" id="filter-name" placeholder="Name">
+</div>
+    <div class="col"></div>
+</div>
+
+
+<table id="employees-table" class="table table-hover table-bordered">
+    <thead class="thead-light">
     <tr>
         <th>
             Employee name
@@ -21,16 +30,94 @@
 
 </table>
 
+<div class="row">
+    <div class="col">
+        <button type="button" class="btn btn-info" data-toggle="modal" data-target="#createModal">Add
+            employee
+        </button>
+    </div>
+
+</div>
+
+<div class="modal fade" id="createModal" tabindex="-1" role="dialog"
+     aria-labelledby="exampleModalLabel" aria-hidden="true">
+    <form>
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="exampleModalLabel">Add employee</h5>
+
+                </div>
+                <div class="modal-body">
+
+                    <div class="form-group">
+                        <label for="employeeNameInput">Name</label>
+                        <input type="text" class="form-control" id="employeeNameInput">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="employeeDateOfBirthInput">Date of birth</label>
+                        <input type="text" class="form-control" id="employeeDateOfBirthInput">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="employeeSalaryInput">Salary</label>
+                        <input type="text" class="form-control" id="employeeSalaryInput">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="inputDepartment">Related Department</label>
+                        <select class="custom-select" id="inputDepartment">
+                        </select>
+
+                    </div>
+
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Close
+                    </button>
+                    <button type="button" class="btn btn-primary" onclick="create_employee()">Save changes</button>
+                </div>
+            </div>
+        </div>
+    </form>
+</div>
+
 {% endblock %}
 
 {% block scripts %}
 <script>
+    let nameQuery;
+
     const tableBody = document.querySelector('#employees-table > tbody');
 
-    const filter = document.getElementById('input-filter')
-    filter.addEventListener('input', filterChange);
+    const filterName = document.getElementById('filter-name')
+    filterName.addEventListener('input', filterNameChange);
+
+
+    async function create_employee(){
+        const data = {
+            name: document.getElementById('employeeNameInput').value,
+            date_of_birth: document.getElementById('employeeDateOfBirthInput').value,
+            salary: document.getElementById('employeeSalaryInput').value,
+            related_department_pk: document.getElementById('inputDepartment').value
+        }
+        await fetch(`/api/employees/`,
+            {
+                method: 'POST',
+                credentials: "same-origin",
+                headers: {
+                    "X-CSRFToken": getCookie("csrftoken"),
+                    "Accept": "application/json",
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(data)
+            })
+            .then(() => window.location.reload())
+    }
 
     async function load_employees(query = "") {
+        query = get_query()
         await fetch('/api/employees' + query)
             .then(response => response.json())
             .then(data => {
@@ -38,10 +125,16 @@
             });
 
     }
-
-    function filterChange(query) {
-        const q = `?name__contains=${query.target.value}`
-        load_employees(q)
+    function get_query(){
+        let query = "?"
+        if (nameQuery){
+            query += `name__contains=${nameQuery}&`
+        }
+        return query
+    }
+    function filterNameChange(query) {
+        nameQuery = query.target.value
+        load_employees()
     }
 
     function insert(employees) {
@@ -72,9 +165,24 @@
 
 
     }
-
+    async function load_departments() {
+        await fetch(`/api/departments/`)
+            .then(response => response.json())
+            .then(data => {
+                departments = data
+                let select = document.getElementById('inputDepartment')
+                departments.forEach((department) => {
+                    let option = document.createElement("option");
+                    option.setAttribute('value', department.id)
+                    option.textContent = department.name;
+                    select.appendChild(option)
+                })
+            });
+    }
+    load_departments()
     document.addEventListener("DOMContentLoaded", () => {
         load_employees();
-    })
+    });
+
 </script>
 {% endblock %}
