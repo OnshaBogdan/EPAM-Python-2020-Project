@@ -86,8 +86,8 @@ class EmployeeSerializer(EmployeeSerializerNested):
         """
         department_pk = validated_data.pop('related_department_pk')
         department = self.get_related_department(department_pk)
-
         instance.related_department = department
+        instance.name = validated_data.get('name')
         instance.salary = validated_data.get('salary', instance.salary)
         instance.date_of_birth = validated_data.get('date_of_birth', instance.date_of_birth)
         instance.save()
