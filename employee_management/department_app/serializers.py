@@ -19,10 +19,11 @@ class DepartmentSerializerNested(serializers.ModelSerializer):
     """
     Department model serializer for usage as nested object.
     """
+    average_salary = serializers.IntegerField(read_only=True)
 
     class Meta:
         model = Department
-        fields = ['id', 'name']
+        fields = ['id', 'name', 'average_salary']
 
 
 class DepartmentSerializer(DepartmentSerializerNested):

@@ -1,0 +1,72 @@
+{% extends "department_app/base.html" %}
+
+
+{% block title %}Employee info{% endblock %}
+
+
+{% block content %}
+<h1 id="title"></h1>
+
+
+<table>
+    <tr>
+        <td>Name</td>
+        <td><strong id="name"></strong></td>
+    </tr>
+    <tr>
+        <td>Related Department</td>
+        <td><strong id="related_department"></strong></td>
+    </tr>
+    <tr>
+        <td>Salary</td>
+        <td><strong id="salary"></strong></td>
+    </tr>
+    <tr>
+        <td>Date of Birth</td>
+        <td><strong id="date_of_birth"></strong></td>
+    </tr>
+</table>
+
+
+{% endblock %}
+
+{% block scripts %}
+<script>
+    const tableBody = document.querySelector('#employees-table > tbody');
+
+
+    async function load_employee() {
+        const pk = {
+        {
+            pk
+        }
+    }
+        ;
+
+        await fetch(`/api/employees/${pk}/`)
+            .then(response => response.json())
+            .then(data => {
+                insert(data)
+            });
+
+    }
+
+    function insert(employee) {
+        document.getElementById('title').innerText = `${employee.name} Info:`;
+
+        document.getElementById('name').innerText = employee.name;
+
+        const departmentLink = document.createElement('a')
+        departmentLink.setAttribute('href', `/departments/${employee.related_department.id}`)
+        departmentLink.innerText = employee.related_department.name;
+        document.getElementById('related_department').appendChild(departmentLink)
+        document.getElementById('salary').innerText = `$${employee.salary}`;
+        document.getElementById('date_of_birth').innerText = employee.date_of_birth;
+
+    }
+
+    document.addEventListener("DOMContentLoaded", () => {
+        load_employee();
+    })
+</script>
+{% endblock %}

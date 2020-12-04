@@ -1,0 +1,88 @@
+{% extends "department_app/base.html" %}
+
+
+{% block title %}Departments{% endblock %}
+
+
+{% block content %}
+<h1>Departments:</h1>
+
+<table id="departments-table">
+    <thead>
+    <tr>
+        <th>
+            Department name
+        </th>
+        <th>Employees</th>
+        <th>Average Salary</th>
+    </tr>
+    </thead>
+    <tbody>
+    <tr>
+        <td>
+            Marketing Department
+        </td>
+        <td>3</td>
+        <td>1800</td>
+    </tr>
+    <tr>
+        <td>
+            <a href="department.html">Finance Department</a>
+        </td>
+        <td>5</td>
+        <td>$1820</td>
+    </tr>
+    </tbody>
+
+</table>
+
+{% endblock %}
+
+{% block scripts %}
+<script>
+    const tableBody = document.querySelector('#departments-table > tbody');
+
+
+    async function load_departments() {
+        await fetch('/api/departments')
+            .then(response => response.json())
+            .then(data => {
+                insert(data)
+            });
+
+    }
+
+    function insert(departments) {
+        while (tableBody.firstChild) {
+            tableBody.removeChild(tableBody.firstChild)
+        }
+
+        departments.forEach((department) => {
+            const tr = document.createElement("tr")
+            const tdName = document.createElement("td")
+            const employeeLink = document.createElement('a')
+            employeeLink.setAttribute('href', `departments/${department.id}`)
+            employeeLink.textContent = department.name;
+            tdName.appendChild(employeeLink);
+            tr.appendChild(tdName);
+
+            const tdEmployees = document.createElement("td")
+            tdEmployees.textContent = department.employees.length;
+            tr.appendChild(tdEmployees)
+
+            const tdSalary = document.createElement("td")
+            tdSalary.textContent = department.average_salary;
+            tr.appendChild(tdSalary)
+
+
+            tableBody.appendChild(tr);
+        });
+
+
+    }
+
+    document.addEventListener("DOMContentLoaded", () => {
+        load_departments();
+    })
+</script>
+{% endblock %}

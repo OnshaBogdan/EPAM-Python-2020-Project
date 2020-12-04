@@ -1,3 +1,6 @@
+from django.shortcuts import render
+from django.views import View
+
 from rest_framework import status, generics
 from rest_framework.exceptions import NotFound
 from rest_framework.response import Response
@@ -5,6 +8,26 @@ from rest_framework.viewsets import ModelViewSet
 
 from .serializers import *
 from .filters import DepartmentFilter, EmployeeFilter
+
+
+class DepartmentsView(View):
+    def get(self, request):
+        return render(request, 'department_app/departments.html')
+
+
+class DepartmentView(View):
+    def get(self, request, pk):
+        return render(request, 'department_app/department.html', context={'pk': pk})
+
+
+class EmployeesView(View):
+    def get(self, request):
+        return render(request, 'department_app/employees.html')
+
+
+class EmployeeView(View):
+    def get(self, request, pk):
+        return render(request, 'department_app/employee.html', context={'pk': pk})
 
 
 class DepartmentViewSet(ModelViewSet):

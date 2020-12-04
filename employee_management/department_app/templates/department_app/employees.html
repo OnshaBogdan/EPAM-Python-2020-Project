@@ -1,0 +1,80 @@
+{% extends "department_app/base.html" %}
+
+{% block title %}Employees{% endblock %}
+
+
+{% block content %}
+<h1>Employees:</h1>
+<input type="text" id="input-filter" placeholder="Search">
+<table id="employees-table">
+    <thead>
+    <tr>
+        <th>
+            Employee name
+        </th>
+        <th>Department</th>
+    </tr>
+    </thead>
+    <tbody>
+
+    </tbody>
+
+</table>
+
+{% endblock %}
+
+{% block scripts %}
+<script>
+    const tableBody = document.querySelector('#employees-table > tbody');
+
+    const filter = document.getElementById('input-filter')
+    filter.addEventListener('input', filterChange);
+
+    async function load_employees(query = "") {
+        await fetch('/api/employees' + query)
+            .then(response => response.json())
+            .then(data => {
+                insert(data)
+            });
+
+    }
+
+    function filterChange(query) {
+        const q = `?name__contains=${query.target.value}`
+        load_employees(q)
+    }
+
+    function insert(employees) {
+        while (tableBody.firstChild) {
+            tableBody.removeChild(tableBody.firstChild)
+        }
+
+        employees.forEach((employee) => {
+            const tr = document.createElement("tr")
+
+            const tdName = document.createElement("td")
+            const employeeLink = document.createElement('a')
+            employeeLink.setAttribute('href', `/employees/${employee.id}`)
+            employeeLink.textContent = employee.name;
+            tdName.appendChild(employeeLink)
+            tr.appendChild(tdName)
+
+            const tdDepartment = document.createElement("td")
+            const departmentLink = document.createElement("a")
+            departmentLink.setAttribute('href', `/departments/${employee.related_department.id}`)
+            departmentLink.textContent = employee.related_department.name
+            tdDepartment.appendChild(departmentLink)
+            tr.appendChild(tdDepartment)
+
+
+            tableBody.appendChild(tr);
+        });
+
+
+    }
+
+    document.addEventListener("DOMContentLoaded", () => {
+        load_employees();
+    })
+</script>
+{% endblock %}

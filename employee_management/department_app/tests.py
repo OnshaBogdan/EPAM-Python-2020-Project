@@ -587,3 +587,47 @@ class DepartmentEmployeeDetailTestCase(TestCase):
             f'/api/departments/{department.pk}/employees/999/'
         )
         self.assertEqual(response.status_code, 404)
+
+class DepartmentsTestCase(TestCase):
+    def setUp(self):
+        finance_department = Department.objects.create(name="Finance")
+        marketing_department = Department.objects.create(name="Marketing")
+
+        Employee.objects.create(
+            name="Shelby Sadler",
+            salary=2000,
+            date_of_birth='1990-01-20',
+            related_department=finance_department
+        )
+        Employee.objects.create(
+            name="Mina Roberts",
+            salary=1300,
+            date_of_birth='2000-06-13',
+            related_department=marketing_department
+        )
+
+    def test_get_departments_list_page(self):
+        response = client.get('')
+
+        self.assertEqual(response.status_code, 200)
+
+    def test_get_department_page(self):
+        department = Department.objects.get(name='Finance')
+
+        response = client.get(f'/departments/{department.pk}/')
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.context['pk'], department.pk)
+
+    def test_get_employees_list_page(self):
+        response = client.get('/employees/')
+
+        self.assertEqual(response.status_code, 200)
+
+    def test_get_employee_page(self):
+        employee = Employee.objects.get(name='Shelby Sadler')
+
+        response = client.get(f'/employees/{employee.pk}/')
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.context['pk'], employee.pk)
