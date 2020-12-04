@@ -8,7 +8,7 @@
 <h1 id="title"></h1>
 
 
-<table>
+<table class="table table-bordered">
     <tr>
         <td>Name</td>
         <td><strong id="name"></strong></td>
@@ -32,23 +32,14 @@
 
 {% block scripts %}
 <script>
-    const tableBody = document.querySelector('#employees-table > tbody');
-
-
     async function load_employee() {
-        const pk = {
-        {
-            pk
-        }
-    }
-        ;
+        const pk = {{ pk }};
 
         await fetch(`/api/employees/${pk}/`)
             .then(response => response.json())
             .then(data => {
                 insert(data)
             });
-
     }
 
     function insert(employee) {

@@ -7,14 +7,14 @@
 {% block content %}
 <h1 id="title"></h1>
 <p class="salary-label">Average Salary - <strong></strong></p>
-<table id="employees-table">
-    <thead>
+<table id="employees-table" class="table table-hover table-bordered">
+    <thead class="thead-light">
     <tr>
-        <th>
+        <th scope="col">
             Employee name
         </th>
-        <th>Date of birth</th>
-        <th>Salary</th>
+        <th scope="col">Date of birth</th>
+        <th scope="col">Salary</th>
     </tr>
     </thead>
     <tbody>
@@ -28,12 +28,7 @@
 {% block scripts %}
 <script>
     const tableBody = document.querySelector('#employees-table > tbody');
-    const pk = {
-    {
-        pk
-    }
-    }
-    ;
+    const pk = {{ pk }};
 
 
     async function load_data() {
